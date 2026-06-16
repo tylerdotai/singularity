@@ -91,7 +91,7 @@ Singularity is a **provider-neutral, local-first AI agent harness** with real-ti
 #### Quick Install
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/tylerdotai/singularity/singularity-base/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/tylerdotai/singularity/main/install.sh | bash
 singularity setup
 ```
 
@@ -117,8 +117,8 @@ singularity setup
 4. Verify installation
    ```bash
    singularity doctor install
-   bun run build    # TypeScript typecheck (zero errors)
-    bun run test     # Run all 645 tests
+    bun run build    # TypeScript typecheck (zero errors)
+    bun run test     # Run all 715 tests
    ```
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>

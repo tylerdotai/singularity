@@ -2,8 +2,8 @@
 set -e
 
 # Installs singularity CLI globally
-# Usage: curl -fsSL https://raw.githubusercontent.com/tylerdotai/singularity/singularity-base/install.sh | bash
-# Supports SINGULARITY_BRANCH env var to install a different branch (default: singularity-base)
+# Usage: curl -fsSL https://raw.githubusercontent.com/tylerdotai/singularity/main/install.sh | bash
+# Supports SINGULARITY_BRANCH env var to install a different branch (default: main)
 # Supports SINGULARITY_VERSION env var to pin a GitHub release version
 # Supports --uninstall flag to remove
 
@@ -47,7 +47,7 @@ ensure_dependencies() {
 
 install_singularity() {
   local version="${SINGULARITY_VERSION:-latest}"
-  local branch="${SINGULARITY_BRANCH:-singularity-base}"
+  local branch="${SINGULARITY_BRANCH:-main}"
   local repo="tylerdotai/singularity"
 
   echo "Installing Singularity (branch: ${branch})..."
@@ -85,7 +85,7 @@ print_next_steps() {
   echo ""
   echo ""
   echo "To install in the future, run:"
-  echo "  curl -fsSL https://raw.githubusercontent.com/tylerdotai/singularity/singularity-base/install.sh | bash"
+  echo "  curl -fsSL https://raw.githubusercontent.com/tylerdotai/singularity/main/install.sh | bash"
 }
 
 uninstall() {

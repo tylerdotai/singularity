@@ -1,0 +1,27 @@
+{
+  "name": "singularity-core",
+  "version": "0.1.0-phase-2.3",
+  "description": "Singularity product core — edge package on top of OpenCode fork. Memory subsystem (Phase 2.1) + sessions table + SessionStore + MCP recall-sessions + get-session wrappers (Phase 2.2). Embedding adapter interface (Phase 2.3): provider-neutral EmbeddingAdapter + NoopEmbeddingAdapter default + FTS5 keyword search.",
+  "type": "module",
+  "license": "MIT",
+  "exports": {
+    ".": "./src/index.ts",
+    "./version": "./src/version.ts",
+    "./memory": "./src/memory/index.ts",
+    "./profiles": "./src/profiles/index.ts"
+  },
+  "scripts": {
+    "build": "echo 'singularity-core is a library (noEmit: true); build is a no-op' && exit 0",
+    "typecheck": "bunx tsc --noEmit --skipLibCheck",
+    "lint": "bunx biome check .",
+    "lint:fix": "bunx biome check --write .",
+    "test": "bun test"
+  },
+  "dependencies": {
+    "singularity-loop": "workspace:*"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.4.16",
+    "@types/node": "^25.9.3"
+  }
+}

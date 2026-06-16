@@ -1,0 +1,4 @@
+# TUI requires the @opentui/solid transform/JSX runtime preload to be registered
+# before Bun evaluates any .tsx file that uses <box>, <text>, <tab_select>, etc.
+# The preload script calls ensureSolidTransformPlugin() at startup.
+preload = ["@opentui/solid/preload"]

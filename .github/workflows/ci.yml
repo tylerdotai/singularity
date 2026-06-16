@@ -1,0 +1,86 @@
+name: CI
+
+on:
+  push:
+    branches: [singularity-base]
+  pull_request:
+    branches: [singularity-base]
+
+jobs:
+  quality:
+    name: Quality (${{ matrix.label }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - label: Bun 1.x
+            setup: bun
+            version: "1"
+            bun-version: "1"
+          - label: Bun 1.2
+            setup: bun
+            version: "1.2"
+            bun-version: "1.2"
+          - label: Node 20
+            setup: node
+            version: "20"
+            bun-version: "1"
+          - label: Node 22
+            setup: node
+            version: "22"
+            bun-version: "1"
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ matrix.bun-version }}
+
+      - name: Setup Node
+        if: matrix.setup == 'node'
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.version }}
+
+      - name: Install dependencies
+        run: bun install
+        working-directory: .
+
+      - name: Lint per package (avoiding bun run --filter which corrupts cache)
+        run: |
+          for pkg in packages/*/; do
+            (cd "$pkg" && bun run lint) || exit 1
+          done
+
+      - name: Coverage report
+        run: bun test --coverage
+        working-directory: .
+
+      - name: Coverage threshold
+        run: bun test --coverage --coverage-threshold=60
+        working-directory: .
+
+  coverage:
+    name: Coverage
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1"
+
+      - name: Install dependencies
+        run: bun install
+        working-directory: .
+
+      - name: Coverage report
+        run: bun test --coverage
+        working-directory: .
+
+      - name: Coverage threshold
+        run: bun test --coverage --coverage-threshold=60
+        working-directory: .

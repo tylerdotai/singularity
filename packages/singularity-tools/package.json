@@ -1,0 +1,22 @@
+{
+  "name": "singularity-tools",
+  "version": "0.1.0",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "test": "bun test",
+    "lint": "bunx biome check .",
+    "lint:fix": "bunx biome check --write --unsafe .",
+    "typecheck": "bunx tsc --noEmit"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.4.16",
+    "vitest": "^3.0.0"
+  },
+  "dependencies": {
+    "playwright": "^1.59.1",
+    "singularity-approvals": "workspace:*"
+  }
+}

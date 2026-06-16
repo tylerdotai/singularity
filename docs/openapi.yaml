@@ -1,0 +1,200 @@
+openapi: 3.0.3
+info:
+  title: Singularity Agent Harness
+  description: Provider-neutral, local-first AI agent harness with WebSocket dashboard
+  version: 0.1.0
+  contact:
+    name: Singularity Support
+servers:
+  - url: http://localhost:18678
+    description: Local development server
+
+paths:
+  /health:
+    get:
+      summary: Health check
+      description: Returns server health status and uptime
+      tags:
+        - System
+      responses:
+        '200':
+          description: Server is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthStatus'
+        '503':
+          description: Server is unhealthy
+
+  /metrics:
+    get:
+      summary: Prometheus metrics
+      description: Returns Prometheus-compatible metrics
+      tags:
+        - System
+      responses:
+        '200':
+          description: Metrics data
+          content:
+            text/plain:
+              schema:
+                type: string
+
+  /api/keys:
+    post:
+      summary: Generate API key
+      description: Creates a new API key for user authentication
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - userId
+              properties:
+                userId:
+                  type: string
+                  description: User identifier
+      responses:
+        '200':
+          description: API key generated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  key:
+                    type: string
+                    description: The generated API key (shown once)
+                  userId:
+                    type: string
+        '405':
+          description: Method not allowed
+
+  /api/token:
+    post:
+      summary: Generate JWT token
+      description: Creates a JWT for session authentication
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - userId
+              properties:
+                userId:
+                  type: string
+                scopes:
+                  type: array
+                  items:
+                    type: string
+                  default:
+                    - read
+      responses:
+        '200':
+          description: JWT token generated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+        '405':
+          description: Method not allowed
+
+  /api/encrypt:
+    post:
+      summary: Encrypt secret
+      description: Encrypts a plaintext secret using AES-256-GCM
+      tags:
+        - Security
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - secret
+              properties:
+                secret:
+                  type: string
+                  description: Plaintext to encrypt
+      responses:
+        '200':
+          description: Encrypted ciphertext
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  encrypted:
+                    type: string
+                    description: AES-256-GCM encrypted ciphertext
+        '405':
+          description: Method not allowed
+
+  /api/decrypt:
+    post:
+      summary: Decrypt ciphertext
+      description: Decrypts AES-256-GCM ciphertext
+      tags:
+        - Security
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - ciphertext
+              properties:
+                ciphertext:
+                  type: string
+                  description: Encrypted ciphertext to decrypt
+      responses:
+        '200':
+          description: Decrypted plaintext
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  decrypted:
+                    type: string
+        '400':
+          description: Decryption failed
+        '405':
+          description: Method not allowed
+
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+          enum:
+            - healthy
+            - degraded
+            - unhealthy
+        uptime:
+          type: integer
+          description: Server uptime in milliseconds
+        checks:
+          type: object
+          additionalProperties:
+            type: object
+            properties:
+              ok:
+                type: boolean
+              detail:
+                type: string

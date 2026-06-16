@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" fill="none">
+  <!-- Background circle -->
+  <circle cx="60" cy="60" r="56" fill="#0f0f23" stroke="#6366f1" stroke-width="2"/>
+
+  <!-- Neural network nodes -->
+  <circle cx="60" cy="30" r="6" fill="#818cf8"/>
+  <circle cx="35" cy="50" r="5" fill="#a78bfa"/>
+  <circle cx="85" cy="50" r="5" fill="#a78bfa"/>
+  <circle cx="45" cy="75" r="5" fill="#c4b5fd"/>
+  <circle cx="75" cy="75" r="5" fill="#c4b5fd"/>
+  <circle cx="60" cy="90" r="6" fill="#818cf8"/>
+
+  <!-- Connections -->
+  <line x1="60" y1="36" x2="40" y2="47" stroke="#6366f1" stroke-width="1.5" opacity="0.7"/>
+  <line x1="60" y1="36" x2="80" y2="47" stroke="#6366f1" stroke-width="1.5" opacity="0.7"/>
+  <line x1="40" y1="53" x2="48" y2="71" stroke="#6366f1" stroke-width="1.5" opacity="0.7"/>
+  <line x1="80" y1="53" x2="72" y2="71" stroke="#6366f1" stroke-width="1.5" opacity="0.7"/>
+  <line x1="51" y1="78" x2="69" y2="78" stroke="#6366f1" stroke-width="1.5" opacity="0.7"/>
+  <line x1="48" y1="78" x2="60" y2="84" stroke="#6366f1" stroke-width="1.5" opacity="0.7"/>
+  <line x1="72" y1="78" x2="60" y2="84" stroke="#6366f1" stroke-width="1.5" opacity="0.7"/>
+
+  <!-- S letter -->
+  <text x="60" y="62" text-anchor="middle" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="#e0e7ff">S</text>
+
+  <!-- Outer ring -->
+  <circle cx="60" cy="60" r="56" fill="none" stroke="#6366f1" stroke-width="1" stroke-dasharray="4 4" opacity="0.5"/>
+</svg>

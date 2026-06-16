@@ -1,0 +1,25 @@
+{
+	"name": "singularity-mcp",
+	"version": "0.1.0",
+	"description": "MCP server exposing Singularity tools (memory, skills, scheduler, approvals, gateway) over stdio transport",
+	"type": "module",
+	"license": "MIT",
+	"exports": {
+		".": "./src/index.ts"
+	},
+	"scripts": {
+		"build": "echo 'singularity-mcp is a library (noEmit: true); build is a no-op' && exit 0",
+		"typecheck": "bunx tsc --noEmit --skipLibCheck",
+		"lint": "bunx biome check .",
+		"lint:fix": "bunx biome check --write .",
+		"test": "bun test"
+	},
+	"dependencies": {
+		"singularity-core": "workspace:*",
+		"singularity-tools": "workspace:*"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "^2.4.16",
+		"@types/node": "^25.9.3"
+	}
+}

@@ -1,0 +1,35 @@
+{
+  "name": "singularity-cli",
+  "version": "0.1.0-phase-7.1",
+  "description": "Singularity CLI entrypoint. Phase 7.1: thin shell with singularity, chat, memory facts, skills list, profile list, and gateway status commands.",
+  "type": "module",
+  "license": "MIT",
+  "bin": {
+    "singularity": "./src/main.ts"
+  },
+  "scripts": {
+    "build": "echo 'singularity-cli is a library (noEmit: true); build is a no-op' && exit 0",
+    "typecheck": "bunx tsc --noEmit --skipLibCheck",
+    "lint": "bunx biome check .",
+    "lint:fix": "bunx biome check --write .",
+    "test": "bun test"
+  },
+  "dependencies": {
+    "@opentui/solid": "^0.4.0",
+    "grammy": "^1.32.0",
+    "discord.js": "^14.26.4",
+    "singularity-approvals": "workspace:*",
+    "singularity-config": "workspace:*",
+    "singularity-core": "workspace:*",
+    "singularity-dashboard": "workspace:*",
+    "singularity-engine": "workspace:*",
+    "singularity-gateway": "workspace:*",
+    "singularity-llm": "workspace:*",
+    "singularity-loop": "workspace:*",
+    "singularity-tools": "workspace:*",
+    "solid-js": "1.9.12"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.4.16"
+  }
+}

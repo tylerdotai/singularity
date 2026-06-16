@@ -1,0 +1,30 @@
+{
+	"name": "singularity-fork-bootstrap",
+	"private": true,
+	"type": "module",
+	"workspaces": [
+		"packages/singularity-core",
+		"packages/singularity-loop",
+		"packages/singularity-approvals",
+		"packages/singularity-cli",
+		"packages/singularity-config",
+		"packages/singularity-engine",
+		"packages/singularity-llm",
+		"packages/singularity-tools",
+		"packages/singularity-gateway",
+		"packages/singularity-dashboard",
+		"packages/singularity-mcp"
+	],
+	"scripts": {
+		"build": "bun run --filter '*' typecheck",
+		"typecheck": "bun run --filter '*' typecheck",
+		"test": "bun run --filter '*' test",
+		"lint": "bun run --filter '*' lint",
+		"singularity": "cd packages/singularity-cli && bun run src/main.ts"
+	},
+	"devDependencies": {
+		"@opentui/solid": "^0.4.0",
+		"@types/bun": "^1.3.14",
+		"@types/node": "^25.9.3"
+	}
+}

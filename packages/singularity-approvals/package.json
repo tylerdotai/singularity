@@ -1,0 +1,21 @@
+{
+	"name": "singularity-approvals",
+	"version": "0.1.0-phase-4.0",
+	"description": "Singularity approval grants and multi-channel human authorization, adapted from permission-vending-machine. Phase 4.0 spike: types and interfaces only; no runtime implementation, no DB, no gateway adapters.",
+	"type": "module",
+	"license": "MIT",
+	"exports": {
+		".": "./src/index.ts"
+	},
+	"scripts": {
+		"build": "echo 'singularity-approvals is a library (noEmit: true); build is a no-op' && exit 0",
+		"typecheck": "bunx tsc --noEmit --skipLibCheck",
+		"lint": "bunx biome check .",
+		"lint:fix": "bunx biome check --write .",
+		"test": "echo 'singularity-approvals has no behavioral tests in Phase 4.0 (spike)' && exit 0"
+	},
+	"dependencies": {},
+	"devDependencies": {
+		"@types/bun": "^1.3.14"
+	}
+}

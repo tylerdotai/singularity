@@ -1,0 +1,29 @@
+version: "3.8"
+
+services:
+  singularity:
+    build: .
+    ports:
+      - "18678:18678"
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - SINGULARITY_JWT_SECRET=${SINGULARITY_JWT_SECRET}
+      - SINGULARITY_ENCRYPTION_KEY=${SINGULARITY_ENCRYPTION_KEY}
+    volumes:
+      - singularity-data:/root/.singularity
+    read_only: true
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:18678/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: "512M"
+
+volumes:
+  singularity-data:

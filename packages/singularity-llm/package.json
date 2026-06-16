@@ -1,0 +1,20 @@
+{
+  "name": "singularity-llm",
+  "version": "0.1.0",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "bunx tsc --noEmit --skipLibCheck",
+    "test": "bun test",
+    "lint": "bunx biome check .",
+    "lint:fix": "bunx biome check --write --unsafe ."
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.4.16",
+    "@types/node": "^25.9.3",
+    "vitest": "^3.0.0"
+  },
+  "dependencies": {}
+}

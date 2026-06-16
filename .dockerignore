@@ -1,0 +1,16 @@
+node_modules
+.git
+*.test.ts
+*.test.tsx
+tests/
+test/
+coverage/
+*.log
+.env
+.env.*
+!.env.example
+*.md
+docs/
+images/
+*.svg
+.DS_Store

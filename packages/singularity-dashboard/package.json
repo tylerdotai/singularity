@@ -1,0 +1,28 @@
+{
+  "name": "singularity-dashboard",
+  "version": "0.0.1",
+  "type": "module",
+  "description": "Dashboard API and UI for Singularity admin console",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./production-server": "./src/production-server.ts",
+    "./metrics": "./src/metrics.ts"
+  },
+  "scripts": {
+    "typecheck": "bunx tsc --noEmit --skipLibCheck",
+    "test": "bun test",
+    "lint": "bunx biome check .",
+    "lint:fix": "bunx biome check --write --unsafe ."
+  },
+  "dependencies": {
+    "solid-js": "^1.9.12",
+    "singularity-approvals": "workspace:*",
+    "singularity-core": "workspace:*"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.4.16",
+    "@types/bun": "latest"
+  }
+}

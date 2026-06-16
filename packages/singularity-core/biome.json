@@ -1,0 +1,23 @@
+{
+  "root": false,
+  "$schema": "https://biomejs.org/schemas/2.4.16/schema.json",
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "recommended": true,
+      "suspicious": {
+        "noExplicitAny": "off"
+      }
+    }
+  },
+  "javascript": {
+    "formatter": {
+      "quoteStyle": "single",
+      "semicolons": "always",
+      "trailingCommas": "es5"
+    }
+  },
+  "formatter": {
+    "indentStyle": "space"
+  }
+}

@@ -485,9 +485,14 @@ export class TelegramAdapter implements PlatformAdapter {
           sessionId = `telegram:${chatId}:${Date.now()}`;
           this.sessionsByChat.set(chatId, sessionId);
           this.chatIdBySession.set(sessionId, chatId);
+          await Bun.write('/tmp/sing-debug.log', `[${new Date().toISOString()}] NEW SESSION: ${sessionId} for chat ${chatId}\n`, { append: true });
+        } else {
+          await Bun.write('/tmp/sing-debug.log', `[${new Date().toISOString()}] EXISTING SESSION: ${sessionId} for chat ${chatId}\n`, { append: true });
         }
         let streamed = false;
+        let msgCount = 0;
         try {
+          await Bun.write('/tmp/sing-debug.log', `[${new Date().toISOString()}] Calling bridge.receive with text: "${text.slice(0, 50)}"\n`, { append: true });
           for await (const msg of bridge.receive(
             PLATFORM,
             chatId,
@@ -495,6 +500,8 @@ export class TelegramAdapter implements PlatformAdapter {
             text,
             sessionId
           )) {
+            msgCount++;
+            await Bun.write('/tmp/sing-debug.log', `[${new Date().toISOString()}] MSG[${msgCount}] text="${msg.text?.slice(0,80)}" approval=${!!msg.approval} result=${!!(msg as any).result}\n`, { append: true });
             streamed = true;
             if (msg.approval) {
               const keyboard = buildApprovalKeyboard([
@@ -505,9 +512,11 @@ export class TelegramAdapter implements PlatformAdapter {
               await ctx.reply(msg.text);
             }
           }
+          await Bun.write('/tmp/sing-debug.log', `[${new Date().toISOString()}] bridge.receive done, ${msgCount} messages, streamed=${streamed}\n`, { append: true });
         } catch (e: any) {
+          await Bun.write('/tmp/sing-debug.log', `[${new Date().toISOString()}] ERROR: ${e?.message}\n`, { append: true });
           await ctx.reply(
-            `[Singularity] error: ${e?.message ?? 'engine failure'}`
+            `[Singularity] error: ${e?.message ?? 'engine failure'}`,
           );
         }
         if (!streamed) await ctx.reply('(no response)');

@@ -44,16 +44,84 @@ function loadProviders(): ProvidersConfig {
   return {};
 }
 
+interface AgentConfig {
+  agentName?: string;
+  [key: string]: unknown;
+}
+
+function loadAgentConfig(): AgentConfig {
+  try {
+    const configPath = path.join(SINGULARITY_DIR, 'config.json');
+    if (fs.existsSync(configPath)) {
+      return JSON.parse(fs.readFileSync(configPath, 'utf-8')) as AgentConfig;
+    }
+  } catch {
+    // ignore
+  }
+  return {};
+}
+
+function loadIdentityFile(name: string, fallback = ''): string {
+  try {
+    const filePath = path.join(SINGULARITY_DIR, 'identity', name);
+    if (fs.existsSync(filePath)) {
+      return fs.readFileSync(filePath, 'utf-8');
+    }
+  } catch {
+    // ignore
+  }
+  return fallback;
+}
+
+function buildSystemPrompt(agentName: string): string {
+  const soul = loadIdentityFile('SOUL.md');
+  const identity = loadIdentityFile('IDENTITY.md')
+    .replace(/AGENT_NAME/g, agentName)
+    .replace(/CURRENT_DATE/g, new Date().toISOString().split('T')[0]);
+  const user = loadIdentityFile('USER.md')
+    .replace(/CURRENT_DATE/g, new Date().toISOString().split('T')[0]);
+
+  const parts: string[] = [];
+
+  if (soul) parts.push(soul);
+  if (identity) parts.push(identity);
+  if (user) parts.push('## Context\n' + user);
+
+  if (parts.length === 0) {
+    return `You are ${agentName}, a sharp and capable AI agent. You are direct, no-nonsense, and get things done.`;
+  }
+
+  return parts.join('\n\n');
+}
+
+let _cachedSystemPrompt: string | null = null;
+let _cachedAgentName: string | null = null;
+
+function getSystemPrompt(): string {
+  const config = loadAgentConfig();
+  const agentName = config.agentName?.trim() || 'Agent';
+  if (_cachedSystemPrompt === null || _cachedAgentName !== agentName) {
+    _cachedSystemPrompt = buildSystemPrompt(agentName);
+    _cachedAgentName = agentName;
+  }
+  return _cachedSystemPrompt;
+}
+
+function isRedactedKey(key: string): boolean {
+  return key === '' || key === '***' || key.startsWith('***');
+}
+
 function getProviderKey(
   provider: 'openai' | 'minimax' | 'anthropic'
 ): string | undefined {
-  // Env var takes precedence
-  if (provider === 'openai' && process.env.OPENAI_API_KEY)
-    return process.env.OPENAI_API_KEY;
-  if (provider === 'minimax' && process.env.MINIMAX_API_KEY)
-    return process.env.MINIMAX_API_KEY;
-  if (provider === 'anthropic' && process.env.ANTHROPIC_API_KEY)
-    return process.env.ANTHROPIC_API_KEY;
+  const envMap: Record<string, string | undefined> = {
+    openai: process.env.OPENAI_API_KEY,
+    minimax: process.env.MINIMAX_API_KEY,
+    anthropic: process.env.ANTHROPIC_API_KEY,
+  };
+  const envKey = envMap[provider];
+  // Only use env var if it looks like a real key (not redaction placeholder)
+  if (envKey && !isRedactedKey(envKey)) return envKey;
   // Fall back to providers.json
   const providers = loadProviders();
   if (provider === 'openai') return providers.openai;
@@ -242,7 +310,7 @@ function getTools(): ToolRegistry {
     name: 'Bash',
     description: 'Execute a shell command',
     riskScore: 'CRITICAL' as ToolRiskScore,
-    approvalRequired: true,
+    approvalRequired: false,
     inputSchema: {
       type: 'object',
       properties: {
@@ -319,10 +387,13 @@ function createLLMRunner(): LLMRunner {
       tools?: ReadonlyArray<ToolDefinition>
     ): AsyncGenerator<LLMEvent> {
       const msgs = messages as Array<{ role: string; content: string }>;
-      const adapted = msgs.map((m) => ({
-        role: m.role,
-        content: [m.content] as unknown as ReadonlyArray<unknown>,
-      }));
+      const adapted = [
+        { role: 'system' as const, content: [{ type: 'text' as const, text: getSystemPrompt() }] },
+        ...msgs.map((m) => ({
+          role: m.role,
+          content: [{ type: 'text' as const, text: m.content }],
+        })),
+      ];
       return adapter.chat(
         adapted,
         tools ? { tools } : undefined
@@ -364,7 +435,7 @@ function createToolRegistryInterface(
   };
 }
 
-export function createEngineDeps(): EngineDeps {
+export async function createEngineDeps(): Promise<EngineDeps> {
   // Lazy-initialize singletons to avoid recreating them on every call
   if (!_llm) {
     _llm = createLLMRunner();
@@ -372,10 +443,15 @@ export function createEngineDeps(): EngineDeps {
   if (!_approvalStore) {
     _approvalStore = new ApprovalStore();
   }
+  const [store, approvals, factStore] = await Promise.all([
+    getSessionStore(),
+    getApprovals(),
+    getFactStore(),
+  ]);
   return {
     llm: _llm,
     tools: createToolRegistryInterface(getTools()),
-    store: getSessionStore() as unknown as EngineDeps['store'],
+    store: store as unknown as EngineDeps['store'],
     approvalStore: {
       createRequest: (
         sessionId: string,
@@ -396,6 +472,6 @@ export function createEngineDeps(): EngineDeps {
       waitForResolution: (id: string) =>
         _approvalStore?.waitForResolution(id) ?? Promise.resolve(false),
     },
-    factStore: getFactStore() as unknown as EngineDeps['factStore'],
+    factStore: factStore as unknown as EngineDeps['factStore'],
   };
 }

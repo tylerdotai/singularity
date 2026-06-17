@@ -185,7 +185,7 @@ export async function runCli(args: string[]): Promise<CliResult> {
   async function runChatRepl(
     rl: ReadlineInterface,
     session: CliSession,
-    deps: ReturnType<typeof createEngineDeps>
+    deps: Awaited<ReturnType<typeof createEngineDeps>>
   ): Promise<void> {
     return new Promise<void>((resolve) => {
       const abort = session.abort;
@@ -253,7 +253,7 @@ export async function runCli(args: string[]): Promise<CliResult> {
       const { createInterface } = await import('node:readline');
       const abort = new AbortController();
       const session = sessionRegistry.add('chat: <repl>', abort);
-      const deps = createEngineDeps();
+      const deps = await createEngineDeps();
       const rl = createInterface({
         input: process.stdin,
         output: process.stdout,
@@ -275,7 +275,7 @@ export async function runCli(args: string[]): Promise<CliResult> {
     const abort = new AbortController();
     const session = sessionRegistry.add(`chat: ${message.slice(0, 40)}`, abort);
     process.on('SIGINT', () => abort.abort());
-    const deps = createEngineDeps();
+    const deps = await createEngineDeps();
     const runner = new SessionRunner(
       { maxSteps: 25, contextWindow: 128000 },
       deps
@@ -318,7 +318,7 @@ export async function runCli(args: string[]): Promise<CliResult> {
     const abort = new AbortController();
     const session = sessionRegistry.add(`plan: ${goal.slice(0, 40)}`, abort);
     process.on('SIGINT', () => abort.abort());
-    const deps = createEngineDeps();
+    const deps = await createEngineDeps();
     const runner = new SessionRunner(
       { maxSteps: 25, contextWindow: 128000 },
       deps
@@ -613,8 +613,8 @@ export async function runCli(args: string[]): Promise<CliResult> {
       try {
         const query = rest[1];
         const facts = query
-          ? ctx.factStore.recall(query, undefined, { limit: 100 })
-          : ctx.factStore.recall(undefined, undefined, { limit: 100 });
+          ? await ctx.factStore.recall(query, undefined, { limit: 100 })
+          : await ctx.factStore.recall(undefined, undefined, { limit: 100 });
         if (facts.length === 0) {
           print_(
             query ? `No facts matching "${query}".` : 'No facts stored yet.'
@@ -894,43 +894,44 @@ export async function runCli(args: string[]): Promise<CliResult> {
         stderr: stderr.join('\n'),
       };
     }
-    const deps = createEngineDeps();
+    const deps = await createEngineDeps();
     const { SessionRunner } = await import('singularity-engine');
     const { createTelegramAdapter, createDiscordAdapter } = await import(
       'singularity-gateway'
     );
 
-    // Create engine runner for the gateway
-    async function* runEngine(
-      sessionID: string,
-      input: string,
-      abortSignal?: AbortSignal
-    ) {
-      const runner = new SessionRunner(
-        { maxSteps: 25, contextWindow: 128000 },
-        deps
-      );
-      for await (const turn of runner.run(
-        [{ type: 'queue', input }],
-        sessionID,
-        abortSignal
+    // Create SessionRunner once for reuse
+    const sessionRunner = new SessionRunner(
+      { maxSteps: 25, contextWindow: 128000 },
+      deps
+    );
+
+    // EngineRunner interface wrapper for the gateway adapters
+    const engineRunner: import('singularity-gateway').EngineRunner = {
+      run: (activity, sessionID, abortSignal) =>
+        sessionRunner.run([activity], sessionID, abortSignal),
+      get approvalStore() {
+        return sessionRunner.approvalStore;
+      },
+    };
+
+    // agentChat/agentPlan are no longer used directly — engineRunner routes
+    // everything through GatewaySessionBridge. Kept for other callers.
+    async function* agentChat(msg: string): AsyncGenerator<string> {
+      for await (const turn of sessionRunner.run(
+        [{ type: 'queue', input: msg }],
+        `telegram:${Date.now()}`
       )) {
         if (turn.textBuffer) yield turn.textBuffer;
       }
     }
 
-    // Wire agent functions for telegram/discord
-    async function* agentChat(msg: string): AsyncGenerator<string> {
-      const sessionId = `telegram:${Date.now()}`;
-      for await (const chunk of runEngine(sessionId, msg)) {
-        yield chunk;
-      }
-    }
-
     async function* agentPlan(goal: string): AsyncGenerator<string> {
-      const sessionId = `telegram:${Date.now()}`;
-      for await (const chunk of runEngine(sessionId, goal)) {
-        yield chunk;
+      for await (const turn of sessionRunner.run(
+        [{ type: 'queue', input: goal }],
+        `telegram:${Date.now()}`
+      )) {
+        if (turn.textBuffer) yield turn.textBuffer;
       }
     }
 
@@ -939,6 +940,7 @@ export async function runCli(args: string[]): Promise<CliResult> {
       const bot = createTelegramAdapter(telegramToken, {
         agentChat,
         agentPlan,
+        engineRunner,
       });
       void bot.start();
       startedChannels.push('telegram');
@@ -947,6 +949,7 @@ export async function runCli(args: string[]): Promise<CliResult> {
       const adapter = createDiscordAdapter(discordToken, {
         agentChat,
         agentPlan,
+        engineRunner,
       });
       void adapter.start();
       startedChannels.push('discord');
@@ -1166,8 +1169,12 @@ export async function runCli(args: string[]): Promise<CliResult> {
         : "missing — run 'singularity setup'",
     });
     try {
-      const cliPath = join(home, '.local', 'bin', 'singularity');
-      if (existsSync(cliPath)) {
+      const cliPaths = [
+        join(home, '.local', 'bin', 'singularity'),
+        join(home, '.bun', 'bin', 'singularity'),
+      ];
+      const cliPath = cliPaths.find((p) => existsSync(p));
+      if (cliPath) {
         const st = statSync(cliPath);
         checks.push({
           name: 'singularity binary',
@@ -1178,7 +1185,7 @@ export async function runCli(args: string[]): Promise<CliResult> {
         checks.push({
           name: 'singularity binary',
           ok: false,
-          detail: 'not installed at ~/.local/bin/singularity',
+          detail: 'not installed — run `bun link -g singularity-cli` from packages/singularity-cli/',
         });
       }
     } catch (e: any) {

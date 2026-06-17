@@ -124,8 +124,18 @@ export class FactStore {
    * Apply every migration in `MIGRATIONS` in order, inside a single
    * `try` block. Each statement is idempotent (`IF NOT EXISTS`), so this
    * is safe to call repeatedly.
+   *
+   * Guard: if `facts` already has the FK schema (migration 004 already
+   * applied), skip entirely — avoids the `fact_history` view + `facts_old`
+   * rename/recreate cycle on dual-migrate from ProfileStore + getFactStore.
    */
   migrate(): void {
+    try {
+      const row = this.db
+        .prepare('SELECT sql FROM sqlite_master WHERE type=? AND name=?')
+        .get('table', 'facts') as { sql: string } | undefined;
+      if (row?.sql?.includes('REFERENCES sessions')) return;
+    } catch { /* table doesn't exist yet, proceed */ }
     for (const migration of MIGRATIONS) {
       try {
         this.db.exec(migration.sql);

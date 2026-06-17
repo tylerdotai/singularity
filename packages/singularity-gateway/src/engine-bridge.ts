@@ -108,11 +108,13 @@ export class GatewaySessionBridge {
       : { type: 'queue', input: text };
 
     try {
+      await Bun.write('/tmp/sing-debug.log', `[${new Date().toISOString()}] engine-bridge: before engineRunner.run for session ${sessionID}\n`, { append: true });
       for await (const turnResult of this.opts.engineRunner.run(
         activity,
         sessionID,
         abortController.signal
       )) {
+        await Bun.write('/tmp/sing-debug.log', `[${new Date().toISOString()}] engine-bridge: got turnResult approval=${!!turnResult.approval} textBuffer="${turnResult.textBuffer?.slice(0,50)}" toolResults=${turnResult.toolResults?.length}\n`, { append: true });
         if (turnResult.approval) {
           yield {
             platform,
@@ -142,6 +144,7 @@ export class GatewaySessionBridge {
         }
       }
     } finally {
+      await Bun.write('/tmp/sing-debug.log', `[${new Date().toISOString()}] engine-bridge: finally block for session ${sessionID}\n`, { append: true });
       this.abortControllers.delete(sessionID);
     }
   }
